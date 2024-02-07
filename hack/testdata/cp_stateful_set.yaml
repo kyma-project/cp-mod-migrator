@@ -3,6 +3,10 @@ kind: StatefulSet
 metadata:
   name: connectivity-proxy
   namespace: kyma-system
+  annotations:
+      reconciler.kyma-project.io/managed-by-reconciler-disclaimer: |-
+        DO NOT EDIT - This resource is managed by Kyma.
+        Any modifications are discarded and the resource is reverted to the original state.
   labels:
     app: connectivity-proxy
     chart: connectivity-proxy-2.9.3

@@ -13,4 +13,5 @@ const (
 	CProxyOnpremiseProxyRfcPort         = "onpremise_proxy_rfc_port"
 	CProxyOnpremiseSocks5ProxyPort      = "onpremise_socks5_proxy_port"
 	CProxyConnectivityServiceSecretName = "connectivity-proxy-service-key"
+	AnnotationKeyManagedByReconciler    = "reconciler.kyma-project.io/managed-by-reconciler-disclaimer"
 )

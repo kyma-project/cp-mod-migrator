@@ -8,6 +8,7 @@ import (
 	"github.com/stretchr/testify/mock"
 	migration "github.tools.sap/framefrog/cp-mod-migrator/pkg"
 	v211 "github.tools.sap/framefrog/cp-mod-migrator/pkg/cproxy/api/v211"
+	v293 "github.tools.sap/framefrog/cp-mod-migrator/pkg/cproxy/api/v293"
 	"github.tools.sap/framefrog/cp-mod-migrator/pkg/mocks"
 	appsv1 "k8s.io/api/apps/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -76,7 +77,11 @@ func setupClientSsNotFound(t *testing.T) (err error) {
 func setupClientSsFound(t *testing.T) (err error) {
 	runFn := func(args mock.Arguments) {
 		cps := args.Get(2).(*appsv1.StatefulSet)
-		*cps = appsv1.StatefulSet{}
+		*cps = appsv1.StatefulSet{
+			ObjectMeta: metav1.ObjectMeta{
+				Annotations: map[string]string{v293.AnnotationKeyManagedByReconciler: "test"},
+			},
+		}
 	}
 
 	mockedClient := mocks.NewClient(t)

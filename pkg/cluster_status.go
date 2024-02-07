@@ -4,6 +4,7 @@ import (
 	"context"
 
 	v211 "github.tools.sap/framefrog/cp-mod-migrator/pkg/cproxy/api/v211"
+	v293 "github.tools.sap/framefrog/cp-mod-migrator/pkg/cproxy/api/v293"
 	appsv1 "k8s.io/api/apps/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -62,6 +63,8 @@ func OldConnProxyInstalled(ctx context.Context, c Client) (bool, error) {
 	if err != nil {
 		return false, err
 	}
-
+	if _, found := cp.Annotations[v293.AnnotationKeyManagedByReconciler]; !found {
+		return false, nil
+	}
 	return true, nil
 }

@@ -31,13 +31,13 @@ var _ = Describe("GetStatus function", func() {
 var _ = Describe("OldConnProxyInstalled function", func() {
 	ctx := context.Background()
 
-	It("should return false if connectivity-porxy stateful-set was not found", func() {
+	It("should return false if connectivity-proxy stateful-set was not found", func() {
 		result, err := migration.OldConnProxyInstalled(ctx, clientSsNotFound)
 		Expect(err).ShouldNot(HaveOccurred())
 		Expect(result).Should(BeFalse())
 	})
 
-	It("should return true if connectivity-porxy stateful-set was found", func() {
+	It("should return true if connectivity-proxy stateful-set was found", func() {
 		result, err := migration.OldConnProxyInstalled(ctx, clientSsFound)
 		Expect(err).ShouldNot(HaveOccurred())
 		Expect(result).Should(BeTrue())
