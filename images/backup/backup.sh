@@ -21,8 +21,13 @@ fi
 
 echo "Connectivity Proxy CR detected... checking backup annotation"
 
+if ! kubectl get connectivityproxies.connectivityproxy.sap.com connectivity-proxy -n kyma-system -o jsonpath='{.metadata.annotations.connectivityproxy\.sap\.com/migrated}' | grep -q "true"; then
+  echo "Connectivity Proxy CR is not annotated as migrated - exiting"
+  exit 0
+fi
+
 if kubectl get connectivityproxies.connectivityproxy.sap.com connectivity-proxy -n kyma-system -o jsonpath='{.metadata.annotations.connectivityproxy\.sap\.com/backed-up}' | grep -q "true"; then
-  echo "Connectivity Proxy CR is already annotated as backed up before migration - exiting"
+  echo "Connectivity Proxy CR is already annotated as backed after migration - exiting"
   exit 0
 fi
 
