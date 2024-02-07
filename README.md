@@ -1,43 +1,96 @@
-> **NOTE:** This is a general template that you can use for a project README.md. Except for the mandatory sections, use only those sections that suit your use case but keep the proposed section order.
->
-> Mandatory sections: 
-> - `Overview`
-> - `Prerequisites`, if there are any requirements regarding hard- or software
-> - `Installation`
-> - `Contributing` - do not change this!
-> - `Code of Conduct` - do not change this!
-> - `Licensing` - do not change this!
+# Connectivity Proxy Migrator
 
-# {Project Title}
-<!--- mandatory --->
-> Modify the title and insert the name of your project. Use Heading 1 (H1).
 
 ## Overview
-<!--- mandatory section --->
 
-> Provide a description of the project's functionality.
->
-> If it is an example README.md, describe what the example illustrates.
+The _Connectivity Proxy Migrator_ repo contains all the necessary components to perform the migration of the old `Connectivity Proxy Kyma component` (currently in version 2.9.3) into new `Kyma Connectivity Proxy module`.
+
+The repository contains following components:
+
+- **Migrator** - Go Application to performs the main migration operation 
+- **Backup** - Bash script that performs the backup of the user configuration
+- **Cleaner** - Bash script that performs the cleanup of the old CP Kubernetes objects
+
+Each component is built as a separate Docker image and stored in Kyma Project artifactory.
 
 ## Prerequisites
 
-> List the requirements to run the project or example.
+- Kyma Cluster with installed Connectivity Proxy component in version 2.9.3
+- New Connectivity Proxy Kyma module ready available to be enabled on Kyma cluster
+- Modified Connectivity Proxy Operator deployment to run migration components as init containers in following order:
 
-## Installation
+1. Migrator
+2. Backup
+3. Cleaner
 
-> Explain the steps to install your project. If there are multiple installation options, mention the recommended one and include others in a separate document. Create an ordered list for each installation task.
->
-> If it is an example README.md, describe how to build, run locally, and deploy the example. Format the example as code blocks and specify the language, highlighting where possible. Explain how you can validate that the example ran successfully. For example, define the expected output or commands to run which check a successful deployment.
->
-> Add subsections (H3) for better readability.
+**Note:** 
+> - Correct RBACs object must be installed on the cluster to allow for execution of init containers. 
+> - Init containers must be configured to communicate over the network without Istio sidecar. This can be done with special UID: 1337 \
+> For details see [this file](hack/test-deployment/connectivity-proxy-operator-all.yaml)
+
+Example part of Deployment that implements migration process:
+
+```yaml
+      initContainers:
+        - name: init-migrator
+          image: europe-docker.pkg.dev/kyma-project/prod/cp-mod-migrator:latest
+          imagePullPolicy: Always
+          securityContext:
+            runAsUser: 1337
+        - name: init-backup
+          image: europe-docker.pkg.dev/kyma-project/prod/cp-mod-backup:latest
+          imagePullPolicy: Always
+          securityContext:
+            runAsUser: 1337
+        - name: init-cleaner
+          image: europe-docker.pkg.dev/kyma-project/prod/cp-mod-cleaner:latest
+          imagePullPolicy: Always
+          securityContext:
+            runAsUser: 1337
+```
 
 ## Usage
 
-> Explain how to use the project. You can create multiple subsections (H3). Include the instructions or provide links to the related documentation.
+The migration process consists of three steps executed in following order:
 
-## Development
+- **Step 1**: Extract the user configuration from config maps and save it into `ConnectivityProxy CR`. 
+- **Step 2**: Backup the user configuration into separate namespcace `connectivity-proxy-backup`.
+- **Step 3**: Delete previous installation of connectivity proxy. 
 
-> Add instructions on how to develop the project or example. It must be clear what to do and, for example, how to trigger the tests so that other contributors know how to make their pull requests acceptable. Include the instructions or provide links to related documentation.
+When migration is completed successfully, the Connectivity Proxy Operator pod should remain be in running state and new Connectivity Proxy module should be installed.
+The connectivyproxy CR should be annotated
+
+## Migrator
+Implements following logic: 
+
+Stores into `connectivityproxy CR`:
+
+All fields under the key `connectivity-proxy-config.yml`  of the config map `connectivity-proxy` .
+
+Following fields from config map `connectivity-proxy-info`:  `onpremise_proxy_http_port`, `onpremise_proxy_ldap_port`, `onpremise_socks5_proxy_port`
+
+In shared tenant mode, the value _`connectivity-service-service-key`_ is saved as Spec.SecretConfig.Integration.ConnectivityService.SecretName 
+
+## Backup
+
+The backup consist of copies of two config maps: `connectivity-proxy` and `connectivity-proxy-info`,
+When migration is completed the backup of the user configuration is stored in the namespace `connectivity-proxy-backup` and allows to restore. 
+
+### backup restore process
+
+
+
+## Cleaner 
+
+
+
+## Troubleshooting
+
+That the Connectivity Proxy service will not be available for a couple of minutes during the migration process.
+This time is required to start new Connectivity Proxy Kyma module.
+When for any reason the service is not available after the migration process, the backup can be restored to the previous state (see Restore section). 
+Please contact the Kyma team for support.
+
 
 ## Contributing
 <!--- mandatory section - do not change this! --->
@@ -50,6 +103,4 @@ See the [Contributing Rules](CONTRIBUTING.md).
 See the [Code of Conduct](CODE_OF_CONDUCT.md) document.
 
 ## Licensing
-<!--- mandatory section - do not change this! --->
-
 See the [license](./LICENSE) file.
