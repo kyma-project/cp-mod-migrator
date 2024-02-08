@@ -4,14 +4,17 @@
 
 This repository contains source code of components which are necessary to perform the migration from the legacy `Connectivity Proxy Kyma component` (currently in version 2.9.3) into new `Kyma Connectivity Proxy module`.
 
-The migration is build as a three-step process where every step is executed by a separate component:
+The migration is designed as a three-step process where very step is executed by a separate component.
+
+The migrator components are:
 
 - **Migrator** - Go Application to performs the main migration operation 
 - **Backup** - Bash script that performs the backup of the user configuration
 - **Cleaner** - Bash script that performs the cleanup of the old CP Kubernetes objects
 
-All components are built as separate Docker images and stored in Kyma Project artifactory. \
-Images are executed as init containers during migration process. 
+They are built as separate Docker images and stored in the Kyma Project artifactory. \
+The migrator Docker Images are executed during startup of newly installed Kyma Connectivity Proxy module. \
+The migration process is designed to be idempotent and can be repeated without any side effects.
 
 ### Prerequisites
 
@@ -56,10 +59,9 @@ Example part of Deployment that fully implements the migration process with init
           securityContext:
             runAsUser: 1337
 ```
-The migration process is designed to be idempotent and can be repeated without any side effects. \
+
 When completed each migration step is marked with by its own annotation on the `ConnectivityProxy CR` object. \
 This ensures that it will not be repeated in case of the Pod restart. 
-
 After successful migration, the Connectivity Proxy Operator pod should remain be in running state and all required Connectivity Proxy module parts should be running on the cluster.
 
 ## Migrator
