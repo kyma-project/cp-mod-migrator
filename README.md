@@ -61,7 +61,7 @@ Example part of Deployment that fully implements the migration process with init
 ```
 
 When completed each migration step is marked with by its own annotation on the `ConnectivityProxy CR` object. \
-This ensures that it will not be repeated in case of the Pod restart. 
+This ensures that it will not be repeated in case of the Pod restart. \
 After successful migration, the Connectivity Proxy Operator pod should remain be in running state and all required Connectivity Proxy module parts should be running on the cluster.
 
 ## Migrator
