@@ -13,14 +13,14 @@ The migrator components are:
 - **Cleaner** - Bash script that performs the cleanup of the old CP Kubernetes objects
 
 They are built as separate Docker images and stored in the Kyma Project artifactory. \
-The migrator Docker Images are executed during startup of newly installed Kyma Connectivity Proxy module. \
+Docker Images are executed during startup of newly installed Kyma Connectivity Proxy module as init containers included into the Connectivity Proxy Operator Deployment. \
 The migration process is designed to be idempotent and can be repeated without any side effects.
 
 ### Prerequisites
 
   - Kyma Cluster with legacy Connectivity Proxy component installed 
   - New Connectivity Proxy Kyma module ready to be enabled on Kyma cluster
-  - Module configured to include Connectivity Proxy init containers into the Connectivity Proxy Operator Deployment.
+  - Module configured to include Connectivity Proxy init containers.
 
 ## Usage
 
