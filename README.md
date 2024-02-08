@@ -8,7 +8,7 @@ The migration is designed as a three-step process where each step is executed by
 
 The migrator components are:
 
-- **Migrator** - Go Application to performs the main migration operation 
+- **Configuration Migrator** - Go Application to performs the main migration operation 
 - **Backup** - Bash script that performs the backup of the user configuration
 - **Cleaner** - Bash script that performs the cleanup of the old CP Kubernetes objects
 
@@ -16,20 +16,63 @@ They are built as separate Docker images and stored in the Kyma Project artifact
 Docker Images are executed during startup of newly installed Kyma Connectivity Proxy module as init containers included into the Connectivity Proxy Operator Deployment. \
 The migration process is designed to be idempotent and can be repeated without any side effects.
 
+### Configuration Migrator
+
+It performs the following steps:
+
+1. Finds default `connectivityproxy CR`
+2. Exits with error if the `connectivityproxy CR` doesn't exist
+3. Exits with success if one of the following conditions is true:
+    - The Connectivity Proxy 2.9.3 is not installed
+    - The `connectivityproxy CR` exists, and have `connectivityproxy.sap.com/migrated` annotation set (migration was performed already)
+4. Reads the current user configuration from `connectivity-proxy`, and `connectivity-proxy-info` config maps
+5. Updates the `connectivityproxy CR` with configuration read from the cluster
+6. Adds `migrator.kyma-project.io/migrated="true"` annotation on the CR.
+
+The migrator transfers the data in the following way:
+- All fields under the key `connectivity-proxy-config.yml` of the config map `connectivity-proxy` are written under `spec.config` key in the CR
+- The keys from the `connectivity-proxy-info` are mapped as follows:
+    - `onpremise_proxy_http_port` is written into `spec.config.servers.proxy.http.port`
+    - `onpremise_proxy_ldap_port` is written into `spec.config.servers.proxy.rfcandldap.port`
+    - `onpremise_socks5_proxy_port` is written into `spec.config.servers.proxy.socks5.port`
+- if tenant mode is shared `spec.secretconfig.integration.connectivityservice.secretname` key is set with `connectivity-proxy-service-key` value
+
+### Backup
+
+It performs the following steps:
+1. Checks if `connectivityproxy` CRD is installed on the cluster, and exits with success if it is not the case
+2. Finds default `connectivityproxy CR`
+3. Exits with success if the `connectivityproxy CR` doesn't exist
+4. Exits with success if the `connectivityproxy CR` `migrator.kyma-project.io/backed-up="true"` annotation (backup was completed already)
+5. Creates `connectivity-proxy-backup` namespace if it doesn't exist
+6. Copies `connectivity-proxy`, and `connectivity-proxy-info` config maps into `connectivity-proxy-backup` namespace
+7. Adds `migrator.kyma-project.io/backed-up="true"` annotation on the CR.
+
+### Cleaner
+
+1. Checks if `connectivityproxy` CRD is installed on the cluster, and exits with success if it is not the case
+2. Finds default `connectivityproxy CR`
+3. Exits with success if the `connectivityproxy CR` doesn't exist
+4. Exits with success if the `connectivityproxy CR` `migrator.kyma-project.io/cleaned="true` annotation (cleanup was completed already)
+5. Removes the legacy Connectivity Proxy 2.9.3 Kubernetes objects from the cluster (`deployments`, `statuefulsets`, `services`, `configmaps` etc.)
+6. Adds `migrator.kyma-project.io/cleaned="true"` annotation on the CR.
+
+
+## Migration process
 ### Prerequisites
 
   - Kyma Cluster with legacy Connectivity Proxy component installed 
   - New Connectivity Proxy Kyma module ready to be enabled on Kyma cluster
   - Module configured to include Connectivity Proxy init containers.
 
-## Usage
+### Implementation details
 
-The migration task will be completed during startup of the `Connectivity Proxy Operator` pod, and implemented with init containers. \
+The migration task will be automatically completed during startup of the `Connectivity Proxy Operator` pod, and implemented with init containers. \
 This Deployment and the default `ConnectivityProxy custom resource (CR)` will be installed on the Kyma cluster when new `Connectivity Proxy Kyma module` is enabled by the user.
 
 The Connectivity Proxy Operator pod runs Connectivity Proxy Migrator components as init containers in following order:
 
-1. **Migrator** - Extracts the user configuration from config maps and saves it into `ConnectivityProxy CR`.
+1. **Configuration Migrator** - Extracts the user configuration from config maps and saves it into `ConnectivityProxy CR`.
 2. **Backup** - Backup of the user configuration into separate namespcace `connectivity-proxy-backup`.
 3. **Cleaner** - Deletes previous installation of connectivity proxy.
 
@@ -64,54 +107,13 @@ When completed each migration step is marked with by its own annotation on the `
 This ensures that it will not be repeated in case of the Pod restart. \
 After successful migration, the Connectivity Proxy Operator pod should remain be in running state and all required Connectivity Proxy module parts should be running on the cluster.
 
-## Migrator
-
-It performs the following steps:
-
-1. Finds default `connectivityproxy CR`
-2. Exits with error if the `connectivityproxy CR` doesn't exist
-3. Exits with success if one of the following conditions is true:
-    - The Connectivity Proxy 2.9.3 is not installed
-    - The `connectivityproxy CR` exists, and have `connectivityproxy.sap.com/migrated` annotation set (migration was performed already)
-4. Reads the current user configuration from `connectivity-proxy`, and `connectivity-proxy-info` config maps
-5. Updates the `connectivityproxy CR` with configuration read from the cluster
-6. Adds `migrator.kyma-project.io/migrated="true"` annotation on the CR.
-
-The migrator transfers the data in the following way:
-- All fields under the key `connectivity-proxy-config.yml` of the config map `connectivity-proxy` are written under `spec.config` key in the CR
-- The keys from the `connectivity-proxy-info` are mapped as follows:
-    - `onpremise_proxy_http_port` is written into `spec.config.servers.proxy.http.port`
-    - `onpremise_proxy_ldap_port` is written into `spec.config.servers.proxy.rfcandldap.port`
-    - `onpremise_socks5_proxy_port` is written into `spec.config.servers.proxy.socks5.port`
-- if tenant mode is shared `spec.secretconfig.integration.connectivityservice.secretname` key is set with `connectivity-proxy-service-key` value
-
-## Backup
-
-It performs the following steps:
-1. Checks if `connectivityproxy` CRD is installed on the cluster, and exits with success if it is not the case
-2. Finds default `connectivityproxy CR`
-3. Exits with success if the `connectivityproxy CR` doesn't exist
-4. Exits with success if the `connectivityproxy CR` `migrator.kyma-project.io/backed-up="true"` annotation (backup was completed already) 
-5. Creates `connectivity-proxy-backup` namespace if it doesn't exist
-6. Copies `connectivity-proxy`, and `connectivity-proxy-info` config maps into `connectivity-proxy-backup` namespace 
-7. Adds `migrator.kyma-project.io/backed-up="true"` annotation on the CR. 
-
-## Cleaner 
-
-1. Checks if `connectivityproxy` CRD is installed on the cluster, and exits with success if it is not the case
-2. Finds default `connectivityproxy CR`
-3. Exits with success if the `connectivityproxy CR` doesn't exist
-4. Exits with success if the `connectivityproxy CR` `migrator.kyma-project.io/cleaned="true` annotation (cleanup was completed already)
-5. Removes the legacy Connectivity Proxy 2.9.3 Kubernetes objects from the cluster (`deployments`, `statuefulsets`, `services`, `configmaps` etc.)
-6. Adds `migrator.kyma-project.io/cleaned="true"` annotation on the CR.  
-
-## Troubleshooting
+### Troubleshooting
 
 It is expected that the `Connectivity Proxy` service will not be available about a minute during migration process. \
 When for any reason the service is not available for a longer time some actions are required to fix the situation. \
 You can try to fix Connectivity Proxy Operator pod or restore the old installation. \
 
-If you want fully restore the previous state use backup of user configuration from the `connectivity-proxy-backup` namespace. \
+If you want to fully restore the previous state use backup of user configuration from the `connectivity-proxy-backup` namespace. \
 Please make sure to contact the Kyma team for support and assistance.
 
 ### Restoring old installation
@@ -152,17 +154,3 @@ else
   echo "Warning! connectivity-proxy-info config map does not exist in connectivity-proxy-backup namespace, operation skipped"
 fi
 ```
-
-
-## Contributing
-<!--- mandatory section - do not change this! --->
-
-See the [Contributing Rules](CONTRIBUTING.md).
-
-## Code of Conduct
-<!--- mandatory section - do not change this! --->
-
-See the [Code of Conduct](CODE_OF_CONDUCT.md) document.
-
-## Licensing
-See the [license](./LICENSE) file.
