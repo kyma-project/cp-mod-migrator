@@ -4,7 +4,7 @@
 
 This repository contains source code of components which are necessary to perform the migration from the legacy `Connectivity Proxy Kyma component` (currently in version 2.9.3) into new `Kyma Connectivity Proxy module`.
 
-The migration is designed as a three-step process where very step is executed by a separate component.
+The migration is designed as a three-step process where each step is executed by a separate component.
 
 The migrator components are:
 
