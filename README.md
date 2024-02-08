@@ -66,36 +66,44 @@ After successful migration, the Connectivity Proxy Operator pod should remain be
 
 ## Migrator
 
-Implements following logic: 
+It performs the following steps:
 
-Reads current user configuration and stores it into `connectivityproxy CR`:
+1. Finds default `connectivityproxy CR`
+2. Exits with error if the `connectivityproxy CR` doesn't exist
+3. Exits with success if one of the following conditions is true:
+    - The Connectivity Proxy 2.9.3 is not installed
+    - The `connectivityproxy CR` exists, and have `connectivityproxy.sap.com/migrated` annotation set (migration was performed already)
+4. Reads the current user configuration from `connectivity-proxy`, and `connectivity-proxy-info` config maps
+5. Updates the `connectivityproxy CR` with configuration read from the cluster
+6. Adds `migrator.kyma-project.io/migrated="true"` annotation on the CR.
 
-All fields under the key `connectivity-proxy-config.yml`  of the config map `connectivity-proxy` .
-
-Following fields from config map `connectivity-proxy-info`:  `onpremise_proxy_http_port`, `onpremise_proxy_ldap_port`, `onpremise_socks5_proxy_port`
-
-In shared tenant mode, the value _`connectivity-service-service-key`_ is saved as Spec.SecretConfig.Integration.ConnectivityService.SecretName 
-
-When completed successfully, the migrator annotates the `connectivityproxy` CR with the `migrator.kyma-project.io/migrated="true"` annotation.
+The migrator transfers the data in the following way:
+- All fields under the key `connectivity-proxy-config.yml` of the config map `connectivity-proxy` are written under `spec.config` key in the CR
+- The keys from the `connectivity-proxy-info` are mapped as follows:
+    - `onpremise_proxy_http_port` is written into `spec.config.servers.proxy.http.port`
+    - `onpremise_proxy_ldap_port` is written into `spec.config.servers.proxy.rfcandldap.port`
+    - `onpremise_socks5_proxy_port` is written into `spec.config.servers.proxy.socks5.port`
+- if tenant mode is shared `spec.secretconfig.integration.connectivityservice.secretname` key is set with `connectivity-proxy-service-key` value
 
 ## Backup
 
-It is executed after migration step was completed successfully.
-
-The backup container runs a bash script that copies the user configuration from the `connectivity-proxy` and `connectivity-proxy-info` config maps to the `connectivity-proxy-backup` namespace.
-
-It is executed only when the previous step is completed successfully and is supposed to be run only once for migrated application.
-
-When completed successfully, the cleaner container annotates the `connectivityproxy` CR with the `migrator.kyma-project.io/backed-up="true"` annotation.
+It performs the following steps:
+1. Checks if `connectivityproxy` CRD is installed on the cluster, and exits with success if it is not the case
+2. Finds default `connectivityproxy CR`
+3. Exits with success if the `connectivityproxy CR` doesn't exist
+4. Exits with success if the `connectivityproxy CR` `migrator.kyma-project.io/backed-up="true"` annotation (backup was completed already) 
+5. Creates `connectivity-proxy-backup` namespace if it doesn't exist
+6. Copies `connectivity-proxy`, and `connectivity-proxy-info` config maps into `connectivity-proxy-backup` namespace 
+7. Adds `migrator.kyma-project.io/backed-up="true"` annotation on the CR. 
 
 ## Cleaner 
 
-It is executed when both previous steps were completed successfully.
-
-The cleaner container runs a script that removes the legacy `Connectivity Proxy` Kubernetes objects from the cluster like `deployments`, `statuefulsets`, `services`, `configmaps` etc. 
-The only remaining object is a secret `connectivity-service-service-key`.
-
-When completed successfully, the backup container annotates the `connectivityproxy` CR with the `migrator.kyma-project.io/cleaned="true"` annotation that ensures it will not run again.
+1. Checks if `connectivityproxy` CRD is installed on the cluster, and exits with success if it is not the case
+2. Finds default `connectivityproxy CR`
+3. Exits with success if the `connectivityproxy CR` doesn't exist
+4. Exits with success if the `connectivityproxy CR` `migrator.kyma-project.io/cleaned="true` annotation (cleanup was completed already)
+5. Removes the legacy Connectivity Proxy 2.9.3 Kubernetes objects from the cluster (`deployments`, `statuefulsets`, `services`, `configmaps` etc.)
+6. Adds `migrator.kyma-project.io/cleaned="true"` annotation on the CR.  
 
 ## Troubleshooting
 
