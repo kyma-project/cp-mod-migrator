@@ -99,18 +99,19 @@ When completed successfully, the backup container annotates the `connectivitypro
 
 ## Troubleshooting
 
-It is expected that the `Connectivity Proxy` service will not be available about a minute during migration process.
-When for any reason the service is not available for a longer time some actions are required to fix the situation.
-You can try to fix Connectivity Proxy Operator pod or restore the old installation.
-If you want fully restore the previous state use backup of user configuration from the `connectivity-proxy-backup` namespace.
+It is expected that the `Connectivity Proxy` service will not be available about a minute during migration process. \
+When for any reason the service is not available for a longer time some actions are required to fix the situation. \
+You can try to fix Connectivity Proxy Operator pod or restore the old installation. \
+
+If you want fully restore the previous state use backup of user configuration from the `connectivity-proxy-backup` namespace. \
 Please make sure to contact the Kyma team for support and assistance.
 
 ### Restoring old installation
 
 The goal is to restore the previous state of the `Connectivity Proxy` in case of any issues during the migration process.
 
-Make sure that the `Connectivity Proxy Operator` pod is running, in such a case disable `Connectivity Proxy` module in Busola or by editing Kyma resource.
-Wait some time for uninstallation of the `Connectivity Proxy` module.
+Make sure that the `Connectivity Proxy Operator` pod is running, in such a case disable `Connectivity Proxy` module in Busola or by editing Kyma resource. \
+Wait some time for uninstallation of the `Connectivity Proxy` module. \
 After the `Connectivity Proxy Module` is removed please wait about one hour Kyma Control Plane to restore legacy `Connectivity Proxy` objects on the cluster
 
 ### Fixing operator pod
