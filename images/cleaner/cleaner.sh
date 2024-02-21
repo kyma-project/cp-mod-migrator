@@ -38,19 +38,23 @@ if kubectl get crd servicemappings.connectivityproxy.sap.com &> /dev/null; then
 
   for mapping in $mappings; do
 
-    echo "Applying annotations to service mapping $mapping"
+    echo "Applying annotations and label to service mapping $mapping"
 
     kubectl annotate servicemappings.connectivityproxy.sap.com "$mapping" \
       io.javaoperatorsdk/primary-name=connectivity-proxy \
       io.javaoperatorsdk/primary-namespace=kyma-system
 
+    kubectl label servicemappings.connectivityproxy.sap.com "$mapping" app.kubernetes.io/managed-by=sap.connectivity.proxy.operator
+
   done
 
-  echo "Applying annotations to service mapping CRD"
+  echo "Applying annotations and label to service mapping CRD"
 
   kubectl annotate crd servicemappings.connectivityproxy.sap.com \
      io.javaoperatorsdk/primary-name=connectivity-proxy \
      io.javaoperatorsdk/primary-namespace=kyma-system
+
+  kubectl label crd servicemappings.connectivityproxy.sap.com app.kubernetes.io/managed-by=sap.connectivity.proxy.operator
 
 fi
 
