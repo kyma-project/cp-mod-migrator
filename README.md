@@ -54,7 +54,7 @@ It performs the following steps:
 2. Finds the default ConnectivityProxy CR
 3. Exits with success if the ConnectivityProxy CR doesn't exist
 4. Exits with success if the ConnectivityProxy CR has the `migrator.kyma-project.io/cleaned="true` annotation (cleanup was completed already)
-5. Migrates preexisting custom resources of type `servicemappings.connectivityproxy.sap.com` CRs and CRDs by adding:
+5. Migrates preexisting instances and definition of custom resources of type `servicemappings.connectivityproxy.sap.com` by adding:
    - Annotations `io.javaoperatorsdk/primary-name=connectivity-proxy` and `io.javaoperatorsdk/primary-namespace=kyma-system`
    - Label `app.kubernetes.io/managed-by=sap.connectivity.proxy.operator`
 6. Removes the legacy Connectivity Proxy 2.9.3 Kubernetes objects from the cluster (Deployments, StatefulSets, Services, ConfigMaps, etc.)
