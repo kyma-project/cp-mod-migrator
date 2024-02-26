@@ -141,8 +141,8 @@ kubectl annotate connectivityproxies.connectivityproxy.sap.com connectivity-prox
 
 ### Restore user configuration from backup
 
-1. Make sure that connectivity-proxy module is already disabled and all components have been removed from the cluster.
-2. Run following commands to remove the remaining Connectivity Proxy Operator Deployment and Custom Resource Definition if necessary (see [this issue](https://github.com/kyma-project/lifecycle-manager/issues/1319) for more details:):
+1. Make sure that connectivity-proxy module is already disabled and all components have been removed from the cluster
+2. Run following commands to remove the remaining Connectivity Proxy Operator Deployment and Custom Resource Definition if necessary (see [this issue](https://github.com/kyma-project/lifecycle-manager/issues/1319) for more details)
 
 ```bash
 kubectl delete deployment -n kyma-system connectivity-proxy-operator
