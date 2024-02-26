@@ -141,18 +141,27 @@ kubectl annotate connectivityproxies.connectivityproxy.sap.com connectivity-prox
 
 ### Restore user configuration from backup
 
-Please run the following script to restore the user configuration from the backup:
+1. Make sure that connectivity-proxy module is already disabled and all components have been removed from the cluster.
+2. Run following commands to remove the remaining Connectivity Proxy Operator Deployment and Custom Resource Definition if necessary (see [this issue](https://github.com/kyma-project/lifecycle-manager/issues/1319) for more details:):
+
+```bash
+kubectl delete deployment -n kyma-system connectivity-proxy-operator
+kubectl delete crd connectivityproxies.connectivityproxy.sap.com
+````
+
+3. Wait about half an hour for the Kyma Control Plane to restore the legacy Connectivity Proxy objects on the cluster.
+4. Run the following script to restore the user configuration from the backup:
 
 ```bash
 if kubectl get cm -n connectivity-proxy-backup connectivity-proxy &> /dev/null; then
-  kubectl get cm -n kyma-system connectivity-proxy-backup -o yaml | sed s/"namespace: connectivity-proxy-backup"/"namespace: kyma-system"/ | kubectl apply -f -
+  kubectl get cm -n connectivity-proxy-backup connectivity-proxy -o yaml | sed -e s/"namespace: connectivity-proxy-backup"/"namespace: kyma-system"/ -e "/uid:/d" -e "/resourceVersion:/d" | kubectl apply -f -
   echo "connectivity-proxy config map restored successfully from backup"
 else
   echo "Warning! connectivity-proxy config map does not exist in connectivity-proxy-backup namespace, operation skipped"
 fi
 
 if kubectl get cm -n connectivity-proxy-backup connectivity-proxy-info &> /dev/null; then
-  kubectl get cm -n connectivity-proxy-backup connectivity-proxy-info -o yaml | sed s/"namespace: connectivity-proxy-backup"/"namespace: kyma-system"/ | kubectl apply -f -
+  kubectl get cm -n connectivity-proxy-backup connectivity-proxy-info -o yaml | sed -e s/"namespace: connectivity-proxy-backup"/"namespace: kyma-system"/ -e "/uid:/d" -e "/resourceVersion:/d" | kubectl apply -f -
   echo "connectivity-proxy-info config map restored successfully from backup"
 else
   echo "Warning! connectivity-proxy-info config map does not exist in connectivity-proxy-backup namespace, operation skipped"
