@@ -100,7 +100,7 @@ kubectl delete virtualservice -n kyma-system cc-proxy-healthcheck --ignore-not-f
 kubectl delete destinationrule -n kyma-system connectivity-proxy-tunnel-0 --ignore-not-found
 kubectl delete destinationrule -n kyma-system connectivity-proxy --ignore-not-found
 kubectl delete peerauthentication -n kyma-system enable-permissive-mode-for-cp --ignore-not-found
-kubectl delete certificate -n istio-system cc-certs --ignore-not-found
+kubectl delete certificates.cert.gardener.cloud -n istio-system cc-certs --ignore-not-found
 
 
 echo "Removing Secrets"
