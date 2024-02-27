@@ -1,36 +1,29 @@
 #!/bin/bash
 
-# Name of the StatefulSet
-statefulSetName="connectivity-proxy"
-
-# Name of the namespace
-namespaceName="kyma-system"
-
-# Label key to check
-reconcilerLabelKey="reconciler\.kyma-project\.io\/managed-by"
-operatorLabelKey="app\.kubernetes\.io\/managed-by"
-
 # Expected label value
 expectedReconcilerLabelValue="reconciler"
 expectedOperatorLabelValue="sap.connectivity.proxy.operator"
 
 # Check if the StatefulSet exists in the specified namespace
-statefulSetExists=$(kubectl get statefulset "$statefulSetName" --namespace "$namespaceName" --ignore-not-found)
+statefulSetExists=$(kubectl get statefulset connectivity-proxy -n kyma-system --ignore-not-found)
 
 if [[ -z "$statefulSetExists" ]]; then
     echo "Connectivity Proxy is not installed on this cluster"
     exit 1
 else
     echo "Connectivity Proxy is installed on this cluster"
-    actualLabelValue=$(kubectl get statefulset "$statefulSetName" --namespace "$namespaceName" -o=jsonpath="{.metadata.labels.reconciler\.kyma-project\.io\/managed-by}" --ignore-not-found)
+    actualLabelValue=$(kubectl get statefulset connectivity-proxy -n kyma-system -o=jsonpath="{.metadata.labels.reconciler\.kyma-project\.io\/managed-by}" --ignore-not-found)
     if [[ "$actualLabelValue" == "$expectedReconcilerLabelValue" ]]; then
         echo "This Connectivity Proxy installation is managed by the Reconciler"
     fi
 
-    actualLabelValue=$(kubectl get statefulset "$statefulSetName" --namespace "$namespaceName" -o=jsonpath="{.metadata.labels.app\.kubernetes\.io\/managed-by}" --ignore-not-found)
+    actualLabelValue=$(kubectl get statefulset connectivity-proxy -n kyma-system -o=jsonpath="{.metadata.labels.app\.kubernetes\.io\/managed-by}" --ignore-not-found)
     if [[ "$actualLabelValue" == "$expectedOperatorLabelValue" ]]; then
         echo "This Connectivity Proxy installation is managed by the Connectivity Proxy Operator"
     fi
+    
+    stateful_set_status=$(kubectl get statefulset connectivity-proxy -n kyma-system -ojsonpath={.status})
+    echo "Connectivity Proxy Stateful Set status: $stateful_set_status"
 fi
 
 
