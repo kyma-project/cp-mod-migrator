@@ -71,7 +71,7 @@ elif [[ "$cpExists" = true && "$operatorExists" = true && "$crdExists" = true &&
    if [[ "$crStatus" = Ready  ]] ; then
      echo "Connectivity Proxy is installed with the Operator. The CR is in Ready state."
    else
-    echo "Connectivity Proxy is installed with the Operator. The CR has unexpected state: $crStatus"    
+    echo "WARNING!Connectivity Proxy is installed with the Operator. The CR has unexpected state: $crStatus"    
   fi
 else
    echo "ERROR! The status of the runtime is inconsistent. " 
