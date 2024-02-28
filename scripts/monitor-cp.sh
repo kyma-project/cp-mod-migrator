@@ -10,6 +10,7 @@ crdExists=false
 crExists=false
 cpInstalledWithReconciler=false
 cpInstalledWithOperator=false 
+crStatus=""
 
 statefulSetExists=$(kubectl get statefulset connectivity-proxy -n kyma-system --ignore-not-found)
 echo "**CHECKING RUNTIME**"
@@ -46,8 +47,8 @@ fi
  
 if kubectl get connectivityproxies.connectivityproxy.sap.com/connectivity-proxy -n kyma-system &> /dev/null; then
    crExists=true
-   operator_state=$(kubectl get connectivityproxies.connectivityproxy.sap.com/connectivity-proxy -n kyma-system -ojsonpath={.status.state})
-   echo "Connectivity Proxy CR state: $operator_state"
+   crStatus=$(kubectl get connectivityproxies.connectivityproxy.sap.com/connectivity-proxy -n kyma-system -ojsonpath={.status.state})
+   echo "Connectivity Proxy CR state: $crStatus"
 else
    echo "The Connectivity Proxy CR NOT FOUND."
 fi
@@ -67,7 +68,11 @@ if [[ "$cpExists" = false && "$operatorExists" = false  && "$crdExists" = false 
 elif [[ "$cpExists" = true && "$operatorExists" = false && "$crdExists" = false && "$crExists" = false ]] ; then
    echo "Connectivity Proxy is installed with the Reconciler"
 elif [[ "$cpExists" = true && "$operatorExists" = true && "$crdExists" = true && "$crExists" = true ]] ; then
-   echo "Connectivity Proxy is installed with the Operator"
+   if [[ "$crStatus" = Ready  ]] ; then
+     echo "Connectivity Proxy is installed with the Operator. The CR is in Ready state."
+   else
+    echo "Connectivity Proxy is installed with the Operator. The CR has unexpected state: $crStatus"    
+  fi
 else
    echo "ERROR! The status of the runtime is inconsistent. " 
 fi
