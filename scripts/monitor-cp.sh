@@ -13,7 +13,7 @@ cpInstalledWithOperator=false
 crStatus=""
 
 statefulSetExists=$(kubectl get statefulset connectivity-proxy -n kyma-system --ignore-not-found)
-echo "**CHECKING RUNTIME**"
+echo "**COMPONENTS STATUS**"
 
 if [[ -z "$statefulSetExists" ]]; then
     echo "Connectivity Proxy StatefulSet NOT FOUND."
@@ -33,7 +33,7 @@ else
        echo "The Connectivity Proxy StatefulSet is managed by the Connectivity Proxy Operator"
     fi
     
-    stateful_set_status=$(kubectl get statefulset connectivity-proxy -n kyma-system -ojsonpath={.status})
+    stateful_set_status=$(kubectl rollout status statefulset connectivity-proxy -n kyma-system)
     echo "Connectivity Proxy Stateful Set status: $stateful_set_status"
 fi
 
@@ -60,6 +60,16 @@ if kubectl get deployment connectivity-proxy-operator -n kyma-system &> /dev/nul
 else
    echo "Connectivity Proxy Operator NOT FOUND."
 fi 
+
+echo ""
+
+echo "**SERVICE INSTANCES**"
+kubectl get serviceinstance.services.cloud.sap.com -A
+echo ""
+
+echo "**SERVICE BINDINGS**"
+kubectl get servicebinding.services.cloud.sap.com -A
+echo ""
 
 # Check status
 printf "\n**SUMMARY**\n"
