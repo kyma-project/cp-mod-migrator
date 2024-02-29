@@ -82,6 +82,14 @@ kubectl delete clusterrolebinding connectivity-proxy-service-mappings --ignore-n
 kubectl delete clusterrole connectivity-proxy-service-mappings --ignore-not-found
 kubectl delete serviceaccount -n kyma-system connectivity-proxy-sm-operator --ignore-not-found
 
+echo "Removing possibly orphaned RBAC resources from previous versions of the Connectivity Proxy"
+
+kubectl delete clusterrolebinding connectivity-proxy-service-mappings-kyma-system --ignore-not-found
+kubectl delete clusterrole connectivity-proxy-sm-validation-webhook-cluster-role --ignore-not-found
+kubectl delete clusterrole connectivity-proxy-service-mappings-kyma-system --ignore-not-found
+kubectl delete serviceaccount -n kyma-system connectivity-proxy-sm-validation --ignore-not-found
+kubectl delete serviceaccount -n kyma-system connectivity-proxy-sm-validation-webhook --ignore-not-found
+
 echo "Removing Webhook"
 kubectl delete validatingwebhookconfiguration webhook-secret --ignore-not-found
 
