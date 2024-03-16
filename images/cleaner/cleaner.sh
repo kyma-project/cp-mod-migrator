@@ -94,7 +94,7 @@ kubectl delete configmap -n kyma-system connectivity-proxy-service-mappings --ig
 echo "Removing Istio resources"
 
 kubectl delete envoyfilter -n istio-system connectivity-proxy-custom-protocol --ignore-not-found
-kubectl delete gateway -n kyma-system kyma-gateway-cc --ignore-not-found
+kubectl delete gateways.networking.istio.io -n kyma-system kyma-gateway-cc --ignore-not-found
 kubectl delete virtualservice -n kyma-system cc-proxy --ignore-not-found
 kubectl delete virtualservice -n kyma-system cc-proxy-healthcheck --ignore-not-found
 kubectl delete destinationrule -n kyma-system connectivity-proxy-tunnel-0 --ignore-not-found
