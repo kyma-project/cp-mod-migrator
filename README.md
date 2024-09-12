@@ -1,5 +1,7 @@
 # Connectivity Proxy Migrator
 
+[![REUSE status](https://api.reuse.software/badge/github.com/kyma-project/cp-mod-migrator)](https://api.reuse.software/info/github.com/kyma-project/cp-mod-migrator)
+
 ## Overview
 
 This repository contains the source code of components that are necessary to perform the migration from the legacy Kyma Connectivity Proxy component (currently in version 2.9.3) into the new Kyma Connectivity Proxy module.
